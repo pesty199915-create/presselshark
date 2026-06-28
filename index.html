@@ -1,6 +1,39 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+	<script>
+(function() {
+  var u = new URLSearchParams(window.location.search);
+  var KEYS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','utm_id','fbclid','ttclid','click_id','_fbp','gclid','xcod','sck','cv','salesCode'];
+  var captured = {};
+  KEYS.forEach(function(k){ var v = u.get(k); if (v) captured[k] = v; });
+  try {
+    var saved = JSON.parse(sessionStorage.getItem('shark_utms') || '{}');
+    Object.keys(captured).forEach(function(k){ saved[k] = captured[k]; });
+    sessionStorage.setItem('shark_utms', JSON.stringify(saved));
+    captured = saved;
+  } catch(e) {}
+  function buildLink(originalHref) {
+    var url = new URL(originalHref, location.origin);
+    Object.keys(captured).forEach(function(k){
+      if (!url.searchParams.has(k)) url.searchParams.set(k, captured[k]);
+    });
+    return url.toString();
+  }
+  function attach() {
+    document.querySelectorAll('a.button, a.cta, a[href*="/l/"], a[href*="/c/"], a[href*="/b/"]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        try { btn.href = buildLink(btn.href); } catch(err) {}
+      }, { once: false, capture: true });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attach);
+  } else {
+    attach();
+  }
+})();
+</script>
 <script
 	src="https://cdn.xtracky.com/scripts/utm-handler.js"
 	data-token="aff1e9de-c109-4f60-bd51-81ef120a612b"
